@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加载CSV文件</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="../static/script/dataAccess.js"></script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.1.js"
+        integrity="sha256-3zlB5s2uwoUzrXK3BT7AX3FyvojsraNFxCc2vC/7pNI=" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div id="app" class="app font-mono w-full min-h-screen ">
+        <div class=" mx-60 pt-40 px-20">
+            <h1
+                class="mb-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl text-center lg:text-6xl text-b">
+                上傳CSV檔案</h1>
+            <p class="mb-6 text-lg font-normal text-gray-500 lg:text-xl sm:px-16 xl:px-48  text-center">
+                上傳CSV去生產一張機器震動圖的圖表。</p>
+            <!-- <input type="file" id="file-input" class="border border-gray-300 p-2 w-full" accept=".csv"> -->
+
+            <div class="flex items-center justify-center">
+                <label for="file-input"
+                    class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 ">
+                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                        <svg class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
+                        </svg>
+                        <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Click to
+                                upload</span> or drag and drop</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">CSV FILE</p>
+                    </div>
+                    <input type="file" id="file-input" class="hidden" accept=".csv">
+                </label>
+            </div>
+
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let output;
+        document.getElementById('file-input').addEventListener('change', (event) => {
+            $("#app").html(`<h1 class="text-4xl font-black py-8 text-center"><span class="filename">
+                <div class="animate-pulse bg-gray-300 w-16 inline-block rounded-lg">...</div>
+            </span></h1>
+            <div class="text-center">
+            <h3>Data Set:</h3>
+            <p>total point : <span class="total"><span class="animate-pulse bg-gray-300 w-16 inline-block rounded-lg">...</span></span></p>
+            <p>x: <span class="x-min"><span class="animate-pulse bg-gray-300 w-16 inline-block rounded-lg my-1">...</span></span> ~ <span class="x-max"><span class="animate-pulse bg-gray-300 w-16 inline-block rounded-lg my-1">...</span></span></p>
+            <p>y: <span class="y-min"><span class="animate-pulse bg-gray-300 w-16 inline-block rounded-lg my-1">...</span></span> ~ <span class="y-max"><span class="animate-pulse bg-gray-300 w-16 inline-block rounded-lg my-1">...</span></span></p>
+            <p>z: <span class="z-min"><span class="animate-pulse bg-gray-300 w-16 inline-block rounded-lg my-1">...</span></span> ~ <span class="z-max"><span class="animate-pulse bg-gray-300 w-16 inline-block rounded-lg my-1">...</span></span></p>
+        </div>
+        <div class="flex h-full flex-col md:flex-row">
+            <div id="xy" class="aspect-square p-2 w-full md:w-1/3">
+                <span class="animate-pulse bg-gray-300 w-full h-full inline-block rounded-lg text-center">loading...</span>
+            </div>
+            <div id="xz" class="aspect-square p-2 w-full md:w-1/3">
+                <span class="animate-pulse bg-gray-300 w-full h-full inline-block rounded-lg text-center">loading...</span>
+            </div>
+            <div id="yz" class="aspect-square p-2 w-full md:w-1/3">
+                <span class="animate-pulse bg-gray-300 w-full h-full inline-block rounded-lg text-center">loading...</span>
+            </div>
+        </div>`)
+            const file = event.target.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    const csvContent = e.target.result;
+
+                    Papa.parse(csvContent, {
+                        complete: function (results) {
+                            result = results.data;
+                            result = result.slice(1, result.length);
+                            // console.log(result);
+
+                            response = new DataReader(file.name, result);
+                            console.log(response);
+                            
+                            $('.filename').html(response["filename"])
+                            $('.total').html(response.len)
+
+                            $('.x-min').html(response.x.minimum)
+                            $('.x-max').html(response.x.maximum)
+
+                            $('.y-min').html(response.y.minimum)
+                            $('.y-max').html(response.y.maximum)
+
+                            $('.z-min').html(response.z.minimum)
+                            $('.z-max').html(response.z.maximum)
+                            const scales = {
+                                x: {
+                                    type: 'linear',
+                                    position: 'center'
+                                },
+                                y: {
+                                    type: 'linear',
+                                    position: "center"
+                                }
+                            }
+
+                            const xyData = {
+                                datasets: [{
+                                    label: "good point",
+                                    data: response.xy.good,
+                                    backgroundColor: "blue"
+                                }, {
+                                    label: "bad point",
+                                    data: response.xy.bad,
+                                    backgroundColor: "red"
+                                },]
+                            }
+                            const xyConfig = {
+                                type: 'scatter',
+                                data: xyData,
+                                options: {
+                                    scales: scales,
+                                    maintainAspectRatio: false,
+                                    responsive: true,
+                                    plugins: {
+                                        title: {
+                                            display: true,
+                                            text: 'xy'
+                                        },
+                                        subtitle: {
+                                            display: true,
+                                            text: `bad point: ${response.xy.bad.length}   fault rate: ${response.xy.rate}%`
+                                        }
+                                    }
+                                }
+                            }
+
+                            const xzData = {
+                                datasets: [{
+                                    label: "good point",
+                                    data: response.xz.good,
+                                    backgroundColor: "blue"
+                                }, {
+                                    label: "bad point",
+                                    data: response.xz.bad,
+                                    backgroundColor: "red"
+                                }]
+                            }
+                            const xzConfig = {
+                                type: 'scatter',
+                                data: xzData,
+                                options: {
+                                    scales: scales,
+                                    maintainAspectRatio: false,
+                                    responsive: true,
+                                    plugins: {
+                                        title: {
+                                            display: true,
+                                            text: 'xz'
+                                        },
+                                        subtitle: {
+                                            display: true,
+                                            text: `bad point: ${response.xz.bad.length}   fault rate: ${response.xz.rate}%`
+                                        }
+                                    }
+                                }
+                            }
+
+                            const yzData = {
+                                datasets: [{
+                                    label: "good point",
+                                    data: response.yz.good,
+                                    backgroundColor: "blue"
+                                }, {
+                                    label: "bad point",
+                                    data: response.yz.bad,
+                                    backgroundColor: "red"
+                                }]
+                            }
+                            const yzConfig = {
+                                type: 'scatter',
+                                data: yzData,
+                                options: {
+                                    scales: scales,
+                                    maintainAspectRatio: false,
+                                    responsive: true,
+                                    plugins: {
+                                        title: {
+                                            display: true,
+                                            text: "yz"
+                                        },
+                                        subtitle: {
+                                            display: true,
+                                            text: `bad point: ${response.yz.bad.length}   fault rate: ${response.yz.rate}%`
+                                        }
+                                    }
+                                }
+                            }
+
+
+                            $("#xy").html("<canvas id='xy-chart'></canvas>")
+                            $("#xz").html("<canvas id='xz-chart'></canvas>")
+                            $("#yz").html("<canvas id='yz-chart'></canvas>")
+                            const xyChart = document.getElementById('xy-chart');
+                            const xzChart = document.getElementById('xz-chart');
+                            const yzChart = document.getElementById('yz-chart');
+
+                            new Chart(xyChart, xyConfig);
+                            new Chart(xzChart, xzConfig);
+                            new Chart(yzChart, yzConfig);
+                        }
+                    });
+                };
+
+                reader.readAsText(file);
+            }
+        });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加载CSV文件</title>
+</head>
+<body>
+
+<input type="file" id="file-input" />
+
+<script>
+    document.getElementById('file-input').addEventListener('change', (event) => {
+        const file = event.target.files[0];
+
+        if (file) {
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                const csvContent = e.target.result;
+                
+                // 在这里处理CSV内容，你可以使用像PapaParse这样的CSV解析库
+                // 示例：Papa.parse(csvContent, {
+                //   complete: function(results) {
+                //     console.log(results.data);
+                //   }
+                // });
+
+                // 为简单起见，让我们在这里仅记录CSV内容
+                
+                data = csvContent.split("\n")
+                data = data.slice(1,data.length);
+                console.log(data);
+            };
+
+            reader.readAsText(file);
+        }
+    });
+</script>
+
+</body>
+</html>
